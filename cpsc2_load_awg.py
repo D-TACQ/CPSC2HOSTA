@@ -49,9 +49,10 @@ def run_main():
     parser.add_argument('--nchan', default=8, type=int, help="set number of channels [8]")
     parser.add_argument('--nsam', default=2048, type=int, help="number of samples in waveform [2048]")
     parser.add_argument('--amplitude', default=1, type=float, help="amplitude in volts")
-    parser.add_argument('--mask', default=(1,-1,0.9,-0.9,0.8,-0.8,0.1,-0.1), help="channel scale factors")
+    parser.add_argument('--mask', default='(1,-1,0.9,-0.9,0.8,-0.8,0.1,-0.1)', help="channel scale factors")
     parser.add_argument('uut', nargs=1, help="uut")
     args = parser.parse_args()
+    args.mask = eval(args.mask)
     args.uut = args.uut[0]
     tt = np.arange(0,args.nsam,dtype=float)
     args.wf=args.amplitude*np.sin(2*np.pi*tt/args.nsam)
