@@ -10,39 +10,48 @@ sin=1*np.sin(tt/2048*2*np.pi)
 awg04.put(sin)
 """
 
+class AwgController:
+	
+    def stop_awg(self, args):
+        print("prepare_awg() {}".format(args.uut))
+	self.active = epics.PV('{}:2:AWG:ACTIVE'.format(args.uut))
+        self.abort = epics.PV('{}:2:AWG:MODE:ABO'.format(args.uut))
+        if self.active.get():
+	    self.abort.put(1)
 
-def stop_awg(args):
-    print("prepare_awg() {}".format(args.uut))
-    active = epics.PV('{}:2:AWG:ACTIVE'.format(args.uut))
-    if active.get():
-        abort = epics.PV('{}:2:AWG:MODE:ABO'.format(args.uut))
-	abort.put(1)
-	while active.get():
+    def wait_stopped(self):
+	while self.active.get():
             print("polling for complete")
 	    time.sleep(0.1)
 
-        abort.put(0)
+        self.abort.put(0)
 
-def prepare_awg(args):
-    stop_awg(args)
-    for ch in ( 'A', 'B' ):
-        epics.PV('{}:2:CPSC_DAC_SRC:{}'.format(args.uut, ch)).put('AWG')
+    def prepare_awg(self, args):
+        for ch in ( 'A', 'B' ):
+            epics.PV('{}:2:CPSC_DAC_SRC:{}'.format(args.uut, ch)).put('AWG')
 
+    def load_ch(self, args, ch):
+        print("load_ch {} amplitude {}".format(ch, args.mask[ch-1]))
+        amp = args.mask[ch-1]
+        chpv = epics.PV('{}:AO:AWG:{:02}:V'.format(args.uut, ch))
+        chpv.put(amp*args.wf)
 
-def load_ch(args, ch):
-    print("load_ch {} amplitude {}".format(ch, args.mask[ch-1]))
-    amp = args.mask[ch-1]
-    chpv = epics.PV('{}:AO:AWG:{:02}:V'.format(args.uut, ch))
-    chpv.put(amp*args.wf)
+    def load_awg(self, args):
+        print("load_awg()")
+        for ch in range(1, args.nchan+1):
+            try:
+                self.load_ch(args, ch)
+            except:
+                break
+        self.wait_stopped()
+        print('set AWG_LOAD_CHANNELS')
+        epics.PV('{}:0:AWG_LOAD_CHANNELS'.format(args.uut)).put(1)
 
-def load_awg(args):
-    print("load_awg()")
-    for ch in range(1, args.nchan+1):
-        try:
-            load_ch(args, ch)
-        except:
-            break
-    epics.PV('{}:0:AWG_LOAD_CHANNELS'.format(args.uut)).put(1)
+    def __init__(self, args):
+        self.stop_awg(args)
+        self.prepare_awg(args)
+        self.load_awg(args)
+
 
 def run_main():
     parser = argparse.ArgumentParser(description="cpsc2 load awg")
@@ -57,8 +66,7 @@ def run_main():
     tt = np.arange(0,args.nsam,dtype=float)
     args.wf=args.amplitude*np.sin(2*np.pi*tt/args.nsam)
 
-    prepare_awg(args)
-    load_awg(args)
+    AwgController(args)
 
 
 # execution starts here
