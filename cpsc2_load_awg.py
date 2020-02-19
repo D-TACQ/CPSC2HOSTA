@@ -1,3 +1,4 @@
+#!/usr/local/bin/python
 import epics
 import numpy as np
 import argparse
