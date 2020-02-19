@@ -1,3 +1,4 @@
+#!/usr/local/bin/python
 import epics
 import numpy as np
 import argparse
@@ -54,10 +55,17 @@ class AwgController:
         print('set AWG_LOAD_CHANNELS')
         epics.PV('{}:0:AWG_LOAD_CHANNELS'.format(args.uut)).put(1)
 
+    def set_txsfp(self, args):
+	epics.PV('{}:SFP:1:TXEN'.format(args.uut)).put(1 if args.txsfp&1 else 0)
+	epics.PV('{}:SFP:2:TXEN'.format(args.uut)).put(1 if args.txsfp&2 else 0)
+	epics.PV('{}:2:CPSC_DAC_PKT:TXEN'.format(args.uut)).put(0 if args.txsfp==0 else 1)
+
     def __init__(self, args):
         self.stop_awg(args)
-        self.prepare_awg(args)
-        self.load_awg(args)
+	self.set_txsfp(args)
+	if not args.stop:
+            self.prepare_awg(args)
+            self.load_awg(args)
 
 
 def run_main():
@@ -65,7 +73,9 @@ def run_main():
     parser.add_argument('--nchan', default=8, type=int, help="set number of channels [8]")
     parser.add_argument('--nsam', default=2048, type=int, help="number of samples in waveform [2048]")
     parser.add_argument('--amplitude', default=1, type=float, help="amplitude in volts")
+    parser.add_argument('--stop', default=0, type=int, help="stop the waveform")
     parser.add_argument('--mask', default='(1,-1,0.9,-0.9,0.8,-0.8,0.1,-0.1)', help="channel scale factors")
+    parser.add_argument('--txsfp', default=0, type=int, help="transmit to sfp mask 1:A, 2:B, 3:both")
     parser.add_argument('uut', nargs=1, help="uut")
     args = parser.parse_args()
     args.mask = eval(args.mask)
