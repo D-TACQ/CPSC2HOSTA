@@ -8,6 +8,13 @@ awg04 = epics.PV('cpsc2_003:AO:AWG:04:V')
 tt = np.arange(0,2048,dtype=float)
 sin=1*np.sin(tt/2048*2*np.pi)
 awg04.put(sin)
+
+
+examples
+  python cpsc2_load_awg.py --amplitude=0.01 cpsc2_003
+  while [ 1 ]; do python cpsc2_load_awg.py --mask='(1,1,0.9,0.9,0.8,0.8,1,1)' cpsc2_003; sleep 5; python cpsc2_load_awg.py --amplitude=0.01 cpsc2_003; sleep 5; done
+  while [ 1 ]; do python cpsc2_load_awg.py --amplitude=0.1 --mask='(1,0.9,0.8,0.7,.6,.5,.4,.3)' cpsc2_003; sleep 5; python cpsc2_load_awg.py --amplitude=0.01 cpsc2_003; sleep 5; done
+
 """
 
 class AwgController:
