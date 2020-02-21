@@ -58,7 +58,6 @@ class AwgController:
     def set_txsfp(self, args):
 	epics.PV('{}:SFP:1:TXEN'.format(args.uut)).put(1 if args.txsfp&1 else 0)
 	epics.PV('{}:SFP:2:TXEN'.format(args.uut)).put(1 if args.txsfp&2 else 0)
-	epics.PV('{}:2:CPSC_DAC_PKT:TXEN'.format(args.uut)).put(0 if args.txsfp==0 else 1)
 
     def __init__(self, args):
         self.stop_awg(args)
