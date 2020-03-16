@@ -75,12 +75,16 @@ def run_main():
     parser.add_argument('--stop', default=0, type=int, help="stop the waveform")
     parser.add_argument('--mask', default='(1,-1,0.9,-0.9,0.8,-0.8,0.1,-0.1)', help="channel scale factors")
     parser.add_argument('--txsfp', default=0, type=int, help="transmit to sfp mask 1:A, 2:B, 3:both")
+    parser.add_argument('--fun', default='np.sin', type=str, help="function np.sin, np.sinh, np.cos etc")
     parser.add_argument('uut', nargs=1, help="uut")
     args = parser.parse_args()
     args.mask = eval(args.mask)
     args.uut = args.uut[0]
     tt = np.arange(0,args.nsam,dtype=float)
-    args.wf=args.amplitude*np.sin(2*np.pi*tt/args.nsam)
+#    args.wf=args.amplitude*np.sin(2*np.pi*tt/args.nsam)
+    fx = eval(args.fun)
+    args.wf=args.amplitude*fx(2*np.pi*tt/args.nsam)
+    args.wf[args.nsam-1] = 0
 
     AwgController(args)
 
