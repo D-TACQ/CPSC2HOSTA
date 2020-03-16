@@ -77,6 +77,7 @@ def run_main():
 #    args.wf=args.amplitude*np.sin(2*np.pi*tt/args.nsam)
     fx = eval(args.fun)
     args.wf=args.amplitude*fx(2*np.pi*tt/args.nsam)
+    args.wf[args.nsam-1] = 0
 
     AwgController(args)
 
