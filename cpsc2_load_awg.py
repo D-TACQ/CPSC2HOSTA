@@ -46,7 +46,8 @@ class AwgController:
                 break
         self.wait_stopped()
         print('set AWG_LOAD_CHANNELS')
-        epics.PV('{}:0:AWG_LOAD_CHANNELS'.format(args.uut)).put(1)
+	epics.PV('{}:2:AWG:BURSTLEN'.format(args.uut)).put(args.burstlen)
+        epics.PV('{}:0:AWG_LOAD_CHANNELS'.format(args.uut)).put(args.mode)
 
     def set_txsfp(self, args):
 	epics.PV('{}:SFP:1:TXEN'.format(args.uut)).put(1 if args.txsfp&1 else 0)
@@ -64,12 +65,14 @@ def run_main():
     parser = argparse.ArgumentParser(description="cpsc2 load awg")
     parser.add_argument('--nchan', default=8, type=int, help="set number of channels [8]")
     parser.add_argument('--nsam', default=2048, type=int, help="number of samples in waveform [2048]")
+    parser.add_argument('--burstlen', default=0, type=int, help=">0 : enable burstlen N")
     parser.add_argument('--amplitude', default=1, type=float, help="amplitude in volts")
     parser.add_argument('--stop', default=0, type=int, help="stop the waveform")
     parser.add_argument('--mask', default='(1,-1,0.9,-0.9,0.8,-0.8,0.1,-0.1)', help="channel scale factors")
     parser.add_argument('--txsfp', default=0, type=int, help="transmit to sfp mask 1:A, 2:B, 3:both")
     parser.add_argument('--fun', default='np.sin', type=str, help="function np.sin, np.sinh, np.cos etc")
     parser.add_argument('--tailz', default=1, type=int, help="trailing zero value count [1]")
+    parser.add_argument('--mode', default=2, type=int, help="mode 2: oneshot_repeat, 0: continuous")
     parser.add_argument('uut', nargs=1, help="uut")
     args = parser.parse_args()
     args.mask = eval(args.mask)
