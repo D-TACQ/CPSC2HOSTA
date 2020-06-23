@@ -64,6 +64,20 @@ class AwgController:
             self.load_awg(args)
 
 
+def pulse(fun, nsam, amp):
+    (hi, lo, count) = [ int(x) for x in fun.split(',')]
+    wf = np.arange(nsam, dtype=float)
+    wf *= 0
+    ix = 0
+    for p in range(0, count):
+        for hx in range(0, hi):
+             wf[ix] = amp
+             ix += 1
+        for hx in range(0, lo):
+             ix += 1
+
+    return wf
+
 def run_main():
     parser = argparse.ArgumentParser(description="cpsc2 load awg")
     parser.add_argument('--nchan', default=8, type=int, help="set number of channels [8]")
@@ -83,8 +97,11 @@ def run_main():
     args.uut = args.uut[0]
     tt = np.arange(0,args.nsam,dtype=float)
 #    args.wf=args.amplitude*np.sin(2*np.pi*tt/args.nsam)
-    fx = eval(args.fun)
-    args.wf=args.amplitude*fx(args.ncycles*2*np.pi*tt/args.nsam)
+    if args.fun.startswith('pulse='):
+        args.wf = pulse(args.fun[len('pulse='):], args.nsam, args.amplitude)
+    else:
+        fx = eval(args.fun)
+        args.wf=args.amplitude*fx(args.ncycles*2*np.pi*tt/args.nsam)
     args.wf[args.nsam-(args.tailz+1):] = 0
 
     AwgController(args)
