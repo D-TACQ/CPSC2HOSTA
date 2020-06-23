@@ -21,9 +21,12 @@ class AwgController:
 	    self.abort.put(1)
 
     def wait_stopped(self):
+	ttime = 0
 	while self.active.get():
-            print("polling for complete")
+	    if (ttime*10) % 10 == 0:
+	        print("{} polling for complete".format(ttime))
 	    time.sleep(0.1)
+	    ttime += 0.1
 
         self.abort.put(0)
 
@@ -65,6 +68,7 @@ def run_main():
     parser = argparse.ArgumentParser(description="cpsc2 load awg")
     parser.add_argument('--nchan', default=8, type=int, help="set number of channels [8]")
     parser.add_argument('--nsam', default=2048, type=int, help="number of samples in waveform [2048]")
+    parser.add_argument('--ncycles', default=1, type=int, help="number of cycles in waveform [1]")
     parser.add_argument('--burstlen', default=0, type=int, help=">0 : enable burstlen N")
     parser.add_argument('--amplitude', default=1, type=float, help="amplitude in volts")
     parser.add_argument('--stop', default=0, type=int, help="stop the waveform")
@@ -80,7 +84,7 @@ def run_main():
     tt = np.arange(0,args.nsam,dtype=float)
 #    args.wf=args.amplitude*np.sin(2*np.pi*tt/args.nsam)
     fx = eval(args.fun)
-    args.wf=args.amplitude*fx(2*np.pi*tt/args.nsam)
+    args.wf=args.amplitude*fx(args.ncycles*2*np.pi*tt/args.nsam)
     args.wf[args.nsam-(args.tailz+1):] = 0
 
     AwgController(args)
