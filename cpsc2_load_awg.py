@@ -66,6 +66,16 @@ class AwgController:
 class BwgController:
     def __init__(self, args):
         self.load_awg(args)
+        self.init_bwg(args)
+
+    def init_bwg_bank(self, args, bank):
+        epics.PV('{}:BWG:{}:NCO:FREQ'.format(args.uut, bank)).put(args.nco_freq)
+        epics.PV('{}:BWG:{}:SAMPLES'.format(args.uut, bank)).put(args.nsam)
+        epics.PV('{}:BWG:{}:EN'.format(args.uut, bank)).put(1)
+        
+    def init_bwg(self, args):
+        self.init_bwg_bank(args, 'A')
+        self.init_bwg_bank(args, 'B')
 
     def load_ch(self, args, ch):
         print("load_ch {} amplitude {}".format(ch, args.mask[ch-1]))
@@ -109,6 +119,7 @@ def run_main():
     parser.add_argument('--tailz', default=1, type=int, help="trailing zero value count [1]")
     parser.add_argument('--mode', default=2, type=int, help="mode 2: oneshot_repeat, 0: continuous")
     parser.add_argument('--bwg', default=0, type=int, help="BRAM WG")
+    parser.add_argument('--nco_freq', default=30000, type=float, help="NCO frequency in Hz")
     parser.add_argument('--phi', default='(0,0,0,0,0,0,0,0)', help="phase in degrees, default=0")
     parser.add_argument('uut', nargs=1, help="uut")
     args = parser.parse_args()
