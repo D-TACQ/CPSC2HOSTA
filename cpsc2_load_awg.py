@@ -45,7 +45,7 @@ class AwgController:
         print("load_ch {} amplitude {}".format(ch, args.mask[ch-1]))
         amp = args.mask[ch-1]
         chpv = epics.PV('{}:AO:AWG:{:02}:V'.format(args.uut, ch))
-        chpv.put(amp*args.wf)
+        chpv.put(amp*args.wf[ch])
 
     def load_awg(self, args):
         print("load_awg()")
@@ -70,6 +70,33 @@ class AwgController:
             self.prepare_awg(args)
             self.load_awg(args)
 
+class BwgController:
+    def __init__(self, args):
+        self.load_awg(args)
+        self.init_bwg(args)
+
+    def init_bwg_bank(self, args, bank):
+        epics.PV('{}:BWG:{}:NCO:FREQ'.format(args.uut, bank)).put(args.nco_freq)
+        epics.PV('{}:BWG:{}:SAMPLES'.format(args.uut, bank)).put(args.nsam)
+        epics.PV('{}:BWG:{}:EN'.format(args.uut, bank)).put(1)
+        
+    def init_bwg(self, args):
+        self.init_bwg_bank(args, 'A')
+        self.init_bwg_bank(args, 'B')
+
+    def load_ch(self, args, ch):
+        print("load_ch {} amplitude {}".format(ch, args.mask[ch-1]))
+        amp = args.mask[ch-1]
+        chpv = epics.PV('{}:AO:BWG:{:02}:V'.format(args.uut, ch))
+        chpv.put(amp*args.wf[ch])
+
+    def load_awg(self, args):
+        print("load_awg()")
+        for ch in range(1, args.nchan+1):
+            try:
+                self.load_ch(args, ch)
+            except:
+                break
 
 def pulse(fun, nsam, amp):
     (hi, lo, count) = [ int(x) for x in fun.split(',')]
@@ -98,20 +125,33 @@ def run_main():
     parser.add_argument('--fun', default='np.sin', type=str, help="function np.sin, np.sinh, np.cos etc")
     parser.add_argument('--tailz', default=1, type=int, help="trailing zero value count [1]")
     parser.add_argument('--mode', default=2, type=int, help="mode 2: oneshot_repeat, 0: continuous")
+    parser.add_argument('--bwg', default=0, type=int, help="BRAM WG")
+    parser.add_argument('--nco_freq', default=30000, type=float, help="NCO frequency in Hz")
+    parser.add_argument('--phi', default='(0,0,0,0,0,0,0,0)', help="phase in degrees, default=0")
     parser.add_argument('uut', nargs=1, help="uut")
     args = parser.parse_args()
+    if args.bwg and args.nsam > 4096:
+        args.nsam = 4096
     args.mask = eval(args.mask)
+    args.phi = eval(args.phi)
     args.uut = args.uut[0]
     tt = np.arange(0,args.nsam,dtype=float)
 #    args.wf=args.amplitude*np.sin(2*np.pi*tt/args.nsam)
+    args.wf = {}
     if args.fun.startswith('pulse='):
-        args.wf = pulse(args.fun[len('pulse='):], args.nsam, args.amplitude)
+        for ch in range(1,9):
+            args.wf[ch] = pulse(args.fun[len('pulse='):], args.nsam, args.amplitude)
     else:
         fx = eval(args.fun)
-        args.wf=args.amplitude*fx(args.ncycles*2*np.pi*tt/args.nsam)
-    args.wf[args.nsam-(args.tailz+1):] = 0
+        for ch in range(1,9):
+            args.wf[ch] = args.amplitude*fx(args.ncycles*2*np.pi*tt/args.nsam + args.phi[ch-1]*2*np.pi/360)
+            if args.bwg == 0:
+                args.wf[ch][args.nsam-(args.tailz+1):] = 0
 
-    AwgController(args)
+    if args.bwg:
+        BwgController(args)
+    else:
+        AwgController(args)
 
 
 # execution starts here
