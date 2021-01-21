@@ -127,7 +127,8 @@ def run_main():
         fx = eval(args.fun)
         for ch in range(1,9):
             args.wf[ch] = args.amplitude*fx(args.ncycles*2*np.pi*tt/args.nsam + args.phi[ch-1]*2*np.pi/360)
-            args.wf[ch][args.nsam-(args.tailz+1):] = 0
+            if args.bwg == 0:
+                args.wf[ch][args.nsam-(args.tailz+1):] = 0
 
     if args.bwg:
         BwgController(args)
