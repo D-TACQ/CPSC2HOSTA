@@ -1,8 +1,7 @@
-CPSC2HOSTA: CPSC2 HOST APPS
+# Generate sample waveforms using BWG
+./cpsc2_load_awg.py --nsam=3600 --nco_freq=216000 --nchan=8 --ncycles=1 --amplitude=1 --mask='(1,1,1,1,1,1,1,1)' --phi='(0,1,2,3,4,5,6,7)' --bwg=1 cpsc2_036
+./cpsc2_load_awg.py --nsam=3600 --nco_freq=216000,10800 --nchan=8 --ncycles=1 --amplitude=1 --mask='(1,1,1,1,1,1,1,1)' --phi='(0,1,2,3,0,10,20,30)' --bwg=1 cpsc2_036
 
-examples:
-cpsc2_load_awg.py --amplitude=0.01 cpsc2_003
-cpsc2_load_awg.py --amplitude=0.1 --mask='(1,0.9,0.8,0.7,.6,.5,.4,.3)' cpsc2_003
+# Transmit a test waveform (fake BPM)
+./cpsc2_load_awg.py --amplitude=-0.9 --mask='(1,-1,0.8,-0.8,0.6,-0.6,0.5,-0.5)' --txsfp=3 cpsc2_003
 
-# functions other than sin are possible, eg
-cpsc2_load_awg.py --fxn=np.sinh cpsc2_003

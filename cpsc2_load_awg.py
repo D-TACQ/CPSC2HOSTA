@@ -76,7 +76,7 @@ class BwgController:
         self.init_bwg(args)
 
     def init_bwg_bank(self, args, bank):
-        epics.PV('{}:BWG:{}:NCO:FREQ'.format(args.uut, bank)).put(args.nco_freq)
+        epics.PV('{}:BWG:{}:NCO:FREQ'.format(args.uut, bank)).put(args.nco_freq[ 0 if bank=='A' else 1 ])
         epics.PV('{}:BWG:{}:SAMPLES'.format(args.uut, bank)).put(args.nsam)
         epics.PV('{}:BWG:{}:EN'.format(args.uut, bank)).put(1)
         
@@ -126,7 +126,7 @@ def run_main():
     parser.add_argument('--tailz', default=1, type=int, help="trailing zero value count [1]")
     parser.add_argument('--mode', default=2, type=int, help="mode 2: oneshot_repeat, 0: continuous")
     parser.add_argument('--bwg', default=0, type=int, help="BRAM WG")
-    parser.add_argument('--nco_freq', default=30000, type=float, help="NCO frequency in Hz")
+    parser.add_argument('--nco_freq', default='30000', type=str, help="NCO frequency in Hz")
     parser.add_argument('--phi', default='(0,0,0,0,0,0,0,0)', help="phase in degrees, default=0")
     parser.add_argument('uut', nargs=1, help="uut")
     args = parser.parse_args()
@@ -134,6 +134,11 @@ def run_main():
         args.nsam = 4096
     args.mask = eval(args.mask)
     args.phi = eval(args.phi)
+    if args.bwg != 0:
+        freq_args = args.nco_freq.split(',')
+        if len(freq_args) == 1:
+            freq_args.append(freq_args[0])
+        args.nco_freq = [ float(x) for x in freq_args ]
     args.uut = args.uut[0]
     tt = np.arange(0,args.nsam,dtype=float)
 #    args.wf=args.amplitude*np.sin(2*np.pi*tt/args.nsam)
