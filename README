@@ -5,3 +5,7 @@
 # Transmit a test waveform (fake BPM)
 ./cpsc2_load_awg.py --amplitude=-0.9 --mask='(1,-1,0.8,-0.8,0.6,-0.6,0.5,-0.5)' --txsfp=3 cpsc2_003
 
+# BWG supports txsfp
+#
+./cpsc2_load_awg.py --nsam=3600 --nco_freq=216000,10800 --nchan=8 --ncycles=1 --amplitude=1 --mask='(1,1,1,1,1,1,1,1)' --phi='(0,1,2,3,0,10,20,30)' --bwg=1 --txsfp=3 cpsc2_036
+

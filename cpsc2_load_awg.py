@@ -18,7 +18,13 @@ examples
 
 """
 
-class AwgController:
+class Controller:
+    def set_txsfp(self, args):
+	epics.PV('{}:SFP:1:TXEN'.format(args.uut)).put(1 if args.txsfp&1 else 0)
+	epics.PV('{}:SFP:2:TXEN'.format(args.uut)).put(1 if args.txsfp&2 else 0)
+
+
+class AwgController(Controller):
 	
     def stop_awg(self, args):
         print("prepare_awg() {}".format(args.uut))
@@ -59,10 +65,6 @@ class AwgController:
 	epics.PV('{}:2:AWG:BURSTLEN'.format(args.uut)).put(args.burstlen)
         epics.PV('{}:0:AWG_LOAD_CHANNELS'.format(args.uut)).put(args.mode)
 
-    def set_txsfp(self, args):
-	epics.PV('{}:SFP:1:TXEN'.format(args.uut)).put(1 if args.txsfp&1 else 0)
-	epics.PV('{}:SFP:2:TXEN'.format(args.uut)).put(1 if args.txsfp&2 else 0)
-
     def __init__(self, args):
         self.stop_awg(args)
 	self.set_txsfp(args)
@@ -70,10 +72,12 @@ class AwgController:
             self.prepare_awg(args)
             self.load_awg(args)
 
-class BwgController:
+class BwgController(Controller):
     def __init__(self, args):
-        self.load_awg(args)
-        self.init_bwg(args)
+	self.set_txsfp(args)
+        if not args.stop:
+            self.load_awg(args)
+            self.init_bwg(args)
 
     def init_bwg_bank(self, args, bank):
         epics.PV('{}:BWG:{}:NCO:FREQ'.format(args.uut, bank)).put(args.nco_freq[ 0 if bank=='A' else 1 ])
